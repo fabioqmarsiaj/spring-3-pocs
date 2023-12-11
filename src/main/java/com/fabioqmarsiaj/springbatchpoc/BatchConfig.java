@@ -57,7 +57,11 @@ public class BatchConfig {
 	public Step step1(JobRepository jobRepository, DataSourceTransactionManager dataSourceTransactionManager,
 	                  FlatFileItemReader<Person> reader, PersonItemProcessor processor, JdbcBatchItemWriter<Person> writer) {
 		return new StepBuilder("step1", jobRepository)
-				// How much data record at a time, in this case 3.
+				/*
+					How much data record at a time, in this case 3.
+					Also, chunck is prefixed with <Person, Person>, that represents
+					the input and output types of each chunck processed.
+				 */
 				.<Person, Person>chunk(3, dataSourceTransactionManager)
 				.reader(reader)
 				.processor(processor)
