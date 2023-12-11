@@ -2,7 +2,9 @@ package com.fabioqmarsiaj.springbatchpoc;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -10,6 +12,7 @@ import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 import javax.sql.DataSource;
 
@@ -28,16 +31,37 @@ public class BatchConfig {
 	}
 
 	@Bean
-	public PersonItemProcessor processor(){
+	public PersonItemProcessor processor() {
 		return new PersonItemProcessor();
 	}
 
 	@Bean
-	public JdbcBatchItemWriter<Person> write(DataSource dataSource){
+	public JdbcBatchItemWriter<Person> write(DataSource dataSource) {
 		return new JdbcBatchItemWriterBuilder<Person>()
 				.sql("INSERT INTO people (first_name, last_name) VALUES (:firstName, :lastName)")
 				.dataSource(dataSource)
 				.beanMapped()
+				.build();
+	}
+
+	@Bean
+	public Job createUserJob(JobRepository jobRepository, Step step1, JobCompletionNotificationListener listener) {
+		return new JobBuilder("createUserJob", jobRepository)
+				.listener(listener)
+				.start(step1)
+				.build();
+
+	}
+
+	@Bean
+	public Step step1(JobRepository jobRepository, DataSourceTransactionManager dataSourceTransactionManager,
+	                  FlatFileItemReader<Person> reader, PersonItemProcessor processor, JdbcBatchItemWriter<Person> writer) {
+		return new StepBuilder("step1", jobRepository)
+				// How much data record at a time, in this case 3.
+				.<Person, Person>chunk(3, dataSourceTransactionManager)
+				.reader(reader)
+				.processor(processor)
+				.writer(writer)
 				.build();
 	}
 }
