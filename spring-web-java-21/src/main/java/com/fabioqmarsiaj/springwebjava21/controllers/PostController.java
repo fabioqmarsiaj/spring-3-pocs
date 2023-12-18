@@ -20,6 +20,6 @@ public class PostController {
 
     @GetMapping("")
     List<Post> findALl() {
-        return jsonPlaceholderService.findALl();
+        return jsonPlaceholderService.findAll();
     }
 }

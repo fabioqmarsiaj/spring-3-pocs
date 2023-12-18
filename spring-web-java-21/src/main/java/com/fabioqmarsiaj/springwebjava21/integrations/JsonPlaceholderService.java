@@ -8,5 +8,5 @@ import java.util.List;
 public interface JsonPlaceholderService {
 
     @GetExchange("/posts")
-    List<Post> findALl();
+    List<Post> findAll();
 }
